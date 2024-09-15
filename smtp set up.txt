@@ -39,7 +39,7 @@ smtp set up
    	 {
       	  $this->name = $name;
        	 $this->email = $email;
-       	 $this->message = $message;
+       	 $this->textmessage = $message;
    	 }
 
 
