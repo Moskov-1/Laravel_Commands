@@ -1,0 +1,15 @@
+php.ini theke comment kora thake uncomment korte hobe.
+;;;;;;;;;;;;;;;;;;;;;;
+; Dynamic Extensions ;
+;;;;;;;;;;;;;;;;;;;;;;
+extension=curl
+extension=fileinfo
+extension=gd
+extension=gettext
+extension=intl
+extension=mbstring
+extension=exif      ; Must be after mbstring as it depends on it
+extension=mysqli
+extension=pdo_sqlite
+extension=soap
+extension=zip
