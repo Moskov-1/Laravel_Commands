@@ -1,0 +1,28 @@
+Breeze install problem solved.
+
+step-1: postcss.config.js
+
+	#previous:
+	export default {
+    plugins: {
+        tailwindcss: {},
+        autoprefixer: {},
+    },
+};
+
+
+
+#update it:
+module.exports = {
+    plugins: {
+        tailwindcss: {},
+        autoprefixer: {},
+    },
+};
+
+
+step-2: 
+	1. npm run build
+	2. npm run dev
+
+ok then install breeze or first install then show problem and fix this system and check.
