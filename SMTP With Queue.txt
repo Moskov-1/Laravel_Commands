@@ -1,0 +1,149 @@
+SMTP With Queue:
+ 
+1. php artisan queue:table
+2. php artisan migrate
+3. php artisan make:job ProcessEmail
+4. php artisan queue:work
+
+5.    
+MAIL_MAILER=smtp
+MAIL_HOST=sandbox.smtp.mailtrap.io
+MAIL_PORT=2525
+MAIL_USERNAME=b71922418cde53
+MAIL_PASSWORD=8ab480bb17011c
+MAIL_ENCRYPTION=null  # Mailtrap does not require encryption
+MAIL_FROM_ADDRESS="iqbalmd5692@gmail.com"
+MAIL_FROM_NAME="${APP_NAME}"
+
+QUEUE_CONNECTION=database
+
+
+6. Jobs> ProcessEmail.php :
+
+<?php
+
+namespace App\Jobs;
+
+use Illuminate\Bus\Queueable;
+use Illuminate\Support\Facades\Mail;
+use App\Mail\YourMailable;
+use Illuminate\Queue\SerializesModels;
+use Illuminate\Queue\InteractsWithQueue;
+use Illuminate\Contracts\Queue\ShouldQueue;
+use Illuminate\Foundation\Bus\Dispatchable;
+
+class ProcessEmail implements ShouldQueue
+{
+    use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
+    protected $emailData;
+
+    //Create a new job instance.
+    public function __construct($emailData)
+    {
+        $this->emailData = $emailData;
+    }
+
+
+    public function handle(): void
+{
+    // Send email to the specified recipient
+    Mail::to($this->emailData['recipient'])->send(new YourMailable($this->emailData));
+
+    // Optional: Send a confirmation email to the user if needed
+    // Mail::to($this->emailData['user_email'])->send(new YourConfirmationMailable($this->emailData));
+}
+
+}
+
+7. Controller :
+
+  	 //Send Mail Function
+    public function sendMail(Request $request)
+    {
+        // Validate the incoming request data
+        $validatedData = $request->validate([
+            'name' => 'required|string|max:255',
+            'email' => 'required|email|string',
+            'message' => 'required|string',
+            'phone' => 'required|string',
+            'country' => 'required|string',
+        ]);
+
+        // Prepare the email data
+        $emailData = [
+            'recipient' => 'iqbalmd5692@gmail.com', // Admin email
+            'user_email' => $validatedData['email'], // User email if needed
+            'subject' => 'New Message from ' . $validatedData['name'],
+            'name' => $validatedData['name'],
+            'message' => $validatedData['message'],
+            'phone' => $validatedData['phone'],
+            'country' => $validatedData['country'],
+        ];
+
+        // Dispatch the job
+        try {
+            ProcessEmail::dispatch($emailData);
+            return redirect()->back()->with('success', 'Thank you. Your message has been sent.');
+        } catch (\Exception $e) {
+            return redirect()->back()->with('error', 'Failed to send message: ' . $e->getMessage());
+        }
+    }
+
+8. Mail>YourMailable.php
+ 
+<?php
+
+namespace App\Mail;
+
+use Illuminate\Bus\Queueable;
+use Illuminate\Mail\Mailable;
+use Illuminate\Mail\Mailables\Content;
+use Illuminate\Mail\Mailables\Envelope;
+use Illuminate\Queue\SerializesModels;
+
+class YourMailable extends Mailable
+{
+    use Queueable, SerializesModels;
+
+    protected $emailData;
+
+    public function __construct($emailData)
+    {
+        $this->emailData = $emailData;
+    }
+
+    public function envelope(): Envelope
+    {
+        return new Envelope(subject: $this->emailData['subject']);
+    }
+
+    public function content(): Content
+    {
+        return new Content(view: 'emails.contact', with: ['emailData' => $this->emailData]);
+    }
+
+    public function attachments(): array
+    {
+        return [];
+    }
+}
+
+9. Send Mail Blade: contact.blade.php
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Contact Form Submission</title>
+</head>
+<body>
+    <p><strong>Name:</strong> {{ $emailData['name'] }}</p>
+    <p><strong>Email:</strong> {{ $emailData['recipient'] }}</p>
+    <p><strong>Message:</strong> {{ $emailData['message'] }}</p>
+    <p><strong>Phone:</strong> {{ $emailData['phone'] }}</p>
+    <p><strong>Country:</strong> {{ $emailData['country'] }}</p>
+</body>
+</html>
+
+10. Route: Route::post('/smtpcontact/sends', [ContactsController::class, 'sendMail'])->name('contact.sends');
+All Done
+
