@@ -4,6 +4,7 @@ SMTP With Queue:
 2. php artisan migrate
 3. php artisan make:job ProcessEmail
 4. php artisan queue:work
+4.1. php artisan make:mail YourMailable
 
 5.    
 MAIL_MAILER=smtp
@@ -55,6 +56,7 @@ class ProcessEmail implements ShouldQueue
 
 }
 
+
 7. Controller :
 
   	 //Send Mail Function
@@ -88,6 +90,8 @@ class ProcessEmail implements ShouldQueue
             return redirect()->back()->with('error', 'Failed to send message: ' . $e->getMessage());
         }
     }
+
+
 
 8. Mail>YourMailable.php
  
@@ -128,6 +132,8 @@ class YourMailable extends Mailable
     }
 }
 
+
+
 9. Send Mail Blade: contact.blade.php
 
 <!DOCTYPE html>
@@ -143,6 +149,7 @@ class YourMailable extends Mailable
     <p><strong>Country:</strong> {{ $emailData['country'] }}</p>
 </body>
 </html>
+
 
 10. Route: Route::post('/smtpcontact/sends', [ContactsController::class, 'sendMail'])->name('contact.sends');
 All Done
