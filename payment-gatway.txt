@@ -1,0 +1,283 @@
+########## Step 1: Install Laravel 10 ###################
+
+composer create-project laravel/laravel example-app
+
+
+############# Step 2: Install stripe-php Package ################
+
+composer require stripe/stripe-php
+
+############# Step 3: Set Stripe API Key and SECRET #############
+** *********************************************************
+# stripe key asbe "stripe.com" a account kholar por.
+
+1. Test mode on
+
+2. Aside Test mode Click "Developer" then select "API KEYS".
+ Search keys this current page. (After coppy the key set .env).
+
+.env :
+STRIPE_KEY=pk_test_reFxwbsm9cdCKASdTfxAR
+STRIPE_SECRET=sk_test_oQMFWteJiPd4wj4AtgApY
+*****************************************************
+
+
+###############################################
+START  LARAVEL PART : 
+For test one process gave here:
+############ Step 4: Create Routes #################
+
+Route::controller(StripePaymentController::class)->group(function(){
+
+    Route::get('stripe', 'stripe');
+
+    Route::post('stripe', 'stripePost')->name('stripe.post');
+
+});
+
+
+######### Step 5: Create Controller File #############
+
+StripePaymentController.php
+
+<?php      
+
+namespace App\Http\Controllers;
+       
+
+use Illuminate\Http\Request;
+
+use Stripe;
+
+use Illuminate\View\View;
+
+use Illuminate\Http\RedirectResponse;
+
+       
+
+class StripePaymentController extends Controller
+
+{
+
+    /**
+
+     * success response method.
+
+     *
+
+     * @return \Illuminate\Http\Response
+
+     */
+
+    public function stripe(): View
+
+    {
+
+        return view('stripe');
+
+    }      
+
+
+
+    public function stripePost(Request $request): RedirectResponse
+
+    {
+
+        Stripe\Stripe::setApiKey(env('STRIPE_SECRET'));
+
+      
+
+        Stripe\Charge::create ([
+
+                "amount" => 10 * 100,
+
+                "currency" => "usd",
+
+                "source" => $request->stripeToken,
+
+                "description" => "Test payment from itsolutionstuff.com." 
+
+        ]);
+
+                
+
+        return back()
+
+                ->with('success', 'Payment successful!');
+
+    }
+
+}
+
+
+############ Step 6: Create Blade File ###########
+resources/views/stripe.blade.php
+
+<!DOCTYPE html>
+
+<html>
+
+<head>
+
+    <title>Laravel 10 - Stripe Payment Gateway Integration Example </title>
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.7/css/bootstrap.min.css" />
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+
+</head>
+
+<body>
+
+      
+
+<div class="container">
+
+      
+
+    <h1> Laravel 10 - Stripe Payment Gateway Integration Example </h1>
+
+      
+
+    <div class="row">
+
+        <div class="col-md-6 col-md-offset-3">
+
+            <div class="panel panel-default credit-card-box">
+
+                <div class="panel-heading display-table" >
+
+                    <h2 class="panel-title" >Checkout Forms</h2>
+
+                </div>
+
+                <div class="panel-body">
+
+      
+
+                    @if (Session::has('success'))
+
+                        <div class="alert alert-success text-center">
+
+                            <a href="#" class="close" data-dismiss="alert" aria-label="close">×</a>
+
+                            <p>{{ Session::get('success') }}</p>
+
+                        </div>
+
+                    @endif
+
+  
+
+                     <form id='checkout-form' method='post' action="{{ route('stripe.post') }}">   
+
+                        @csrf             
+
+                        <input type='hidden' name='stripeToken' id='stripe-token-id'>                              
+
+                        <br>
+
+                        <div id="card-element" class="form-control" ></div>
+
+                        <button 
+
+                            id='pay-btn'
+
+                            class="btn btn-success mt-3"
+
+                            type="button"
+
+                            style="margin-top: 20px; width: 100%;padding: 7px;"
+
+                            onclick="createToken()">PAY $10
+
+                        </button>
+
+                    <form>
+
+      
+
+                </div>
+
+            </div>        
+
+        </div>
+
+    </div>
+
+          
+
+</div>
+
+      
+
+</body>
+
+     
+
+<script src="https://js.stripe.com/v3/"></script>
+
+<script type="text/javascript">
+
+  
+
+    var stripe = Stripe('{{ env('STRIPE_KEY') }}')
+
+    var elements = stripe.elements();
+
+    var cardElement = elements.create('card');
+
+    cardElement.mount('#card-element');
+
+  
+
+    /*------------------------------------------
+
+    --------------------------------------------
+
+    Create Token Code
+
+    --------------------------------------------
+
+    --------------------------------------------*/
+
+    function createToken() {
+
+        document.getElementById("pay-btn").disabled = true;
+
+        stripe.createToken(cardElement).then(function(result) {
+
+   
+
+            if(typeof result.error != 'undefined') {
+
+                document.getElementById("pay-btn").disabled = false;
+
+                alert(result.error.message);
+
+            }
+
+  
+
+            /* creating token success */
+
+            if(typeof result.token != 'undefined') {
+
+                document.getElementById("stripe-token-id").value = result.token.id;
+
+                document.getElementById('checkout-form').submit();
+
+            }
+
+        });
+
+    }
+
+</script>
+
+ 
+
+</html>
+
+
+
