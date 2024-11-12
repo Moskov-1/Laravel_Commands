@@ -1,5 +1,20 @@
-########## Step 1: Install Laravel 10 ###################
 
+For paypal see this link : 
+............................................
+https://medium.com/geekculture/paypal-payment-gateway-integration-with-laravel-ebebc7ccf470
+
+Ai link r nicher work same: 
+..........................................................
+https://www.itsolutionstuff.com/post/laravel-10-stripe-payment-gateway-integration-tutorialexample.html
+
+Also need this link for stripe:
+https://dashboard.stripe.com/login?redirect=%2Ftest%2Fbalance
+
+Stripe test card link:
+https://docs.stripe.com/testing
+
+
+########## Step 1: Install Laravel 10 ###################
 composer create-project laravel/laravel example-app
 
 
