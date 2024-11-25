@@ -1,0 +1,31 @@
+ ****************** NO. 1 System *******************
+Call system : <img src="{{ asset($item->image) }}" width="50" height="50" alt="service image">
+
+
+public function store(Request $request)
+     {
+          // Validate the input
+          $validated = $request->validate([
+             'title' => 'required|string|max:255',
+             'description' => 'required|string',
+             'image' => 'required|mimes:jpeg,png,jpg,gif,svg|max:5120',
+             'status' => 'required|in:active,inactive',
+         ]);
+
+         // Handle image upload 
+         if ($request->hasFile('image')) {
+             $image = $request->file('image');
+             $imageName = time() . '_' . $image->getClientOriginalName();
+             $imagePath = public_path('/service/image/');
+             // Move the image to the public storage folder
+             $image->move($imagePath, $imageName);
+             $validated['image'] = '/service/image/' . $imageName;
+         }
+
+         // Create and store the service
+         Service::create($validated);
+
+         return redirect()->route('service.all')->with('t-success', 'Service created successfully');
+     }
+
+ ****************** NO.2 System *******************
