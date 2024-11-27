@@ -1,0 +1,160 @@
+laravel 10 middleware:
+
+******************* Step: 1 *****************
+php artisan make:middleware Role
+(Role.php)
+
+Role.php  :
+
+ public function handle(Request $request, Closure $next, $role): Response
+    {
+
+
+        $userRole = $request->user()->role;
+
+        if (!$request->user()) {
+            return redirect('/login');
+        }
+
+        // Redirect based on the expected role
+        if ($role === 'admin') {
+            if ($userRole !== 'admin') {
+                return redirect('/agency/dashboard');
+            }
+        } elseif ($role === 'agent') {
+            if ($userRole !== 'agent') {
+                return redirect('/user/profile');
+            }
+        } elseif ($role === 'user') {
+            if ($userRole !== 'user') {
+                return redirect('admin');
+            }
+        }
+        return $next($request);
+    }
+
+
+
+
+******************* Step: 2 *****************
+
+RouteServiceProvider.php
+
+
+class RouteServiceProvider extends ServiceProvider
+{
+    /**
+     * The path to your application's "home" route.
+     *
+     * Typically, users are redirected here after authentication.
+     *
+     * @var string
+     */
+    public const HOME = '/dashboard';
+    public const AGENTHOME = '/agency/dashboard';
+    public const ADMINHOME = '/admin';
+
+
+    /**
+     * Define your route model bindings, pattern filters, and other route configuration.
+     */
+    public function boot(): void
+    {
+        RateLimiter::for('api', function (Request $request) {
+            return Limit::perMinute(60)->by($request->user()?->id ?: $request->ip());
+        });
+
+        $this->routes(function () {
+            Route::middleware('api')
+                ->prefix('api')
+                ->group(base_path('routes/api.php'));
+            Route::middleware(['web', 'role:admin'])
+                ->prefix('admin')
+                ->as('admin.')
+                ->group(base_path('routes/backend.php'));
+            Route::middleware(['web', 'role:agent'])
+                ->prefix('agency')
+                ->as('agency.')
+                ->group(base_path('routes/agency.php'));    
+           /*  Route::middleware(['web', 'role:admin'])
+                ->prefix('admin')
+                ->as('admin.')
+                ->group(base_path('routes/robin_backend.php'));  */
+            Route::middleware('web')
+                ->group(base_path('routes/web.php'));
+        });
+    }
+
+
+
+******************* Step: 3 *****************
+
+AuthenticatedSessionController.php
+
+
+
+
+ public function store(LoginRequest $request): RedirectResponse
+    {
+    
+    $request->authenticate();
+
+    $request->session()->regenerate();
+    if (Auth::user()->role === 'user') {
+        Auth::logout(); 
+        return redirect()->route('login')->with(
+            't-error' ,'Users with the "user" role are not allowed to log in.'
+        );
+    }
+
+    // Custom role-based redirect
+    if (Auth::user()->role === 'admin') {
+        return redirect()->intended(RouteServiceProvider::ADMINHOME);
+    }
+    return redirect()->intended(RouteServiceProvider::AGENTHOME);  // default redirect
+    }
+
+
+******************* Step: 4 *****************
+
+backend.php  :
+-------------------------------
+
+Route::middleware(['auth', 'role:admin'])->group(function () {
+
+    Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
+
+});
+
+
+
+frontend.php  :
+-----------------------------------
+
+Route::controller(HomeController::class)->middleware(['auth', 'role:user'])->group(function () {
+
+    Route::get('/dashboard', 'UserDashboard')->name('user-dashboard');
+
+
+});
+
+
+
+
+
+***************************** END *******************************
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
