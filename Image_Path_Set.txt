@@ -29,3 +29,29 @@ public function store(Request $request)
      }
 
  ****************** NO.2 System *******************
+
+  $validator = Validator::make($request->all(), [
+            'system_name' => 'nullable',
+            'description' => 'nullable',
+            'logo' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048',  // Adding image validation
+            'favicon' => 'nullable|mimes:jpeg,png,jpg,gif,svg,ico|max:2048',  // Adding image validation
+            'copyright' => 'nullable',
+        ]);
+
+
+        if ($validator->fails()) {
+            return redirect()->back()->withErrors($validator)->withInput();
+        }
+        try {
+            $setting = SystemSetting::firstOrNew();
+            $setting->system_name = $request->system_name;
+            $setting->description = $request->description;
+            $setting->copyright = $request->copyright;
+
+            // Handle logo upload
+            if ($request->hasFile('logo')) {
+                $image = $request['logo']->getClientOriginalName();
+                $imagePath = '/system/logo/' . time() . '_' . $image;  // Unique image path with timestamp
+                $request['logo']->move(public_path('/system/logo/'), $imagePath);
+                $setting->logo = $imagePath;
+            }
