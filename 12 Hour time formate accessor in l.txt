@@ -1,0 +1,38 @@
+// 12 Hour time formate accessor in laravel
+
+public function store(Request $request)
+    {
+     
+        $request->validate([
+'start_time' => 'required|date_format:H:i',
+ 'end_time' => 'required|date_format:H:i|after:start_time',
+
+]);
+
+Note : 'start_time' & 'end_time'  model a avabe Accessor hisebe likhte te hoy. tatei laravel bujhe ney.  "startTime(): Attribute" & "endTime(): Attribute"
+
+
+class Ticket extends Model
+{
+    use HasFactory;
+    protected $guarded = [];
+
+
+    //This Accessor for 12 hours time formate with AM/PM
+
+    protected function startTime(): Attribute
+    {
+        return Attribute::make(
+            get: fn(string $value) => Carbon::parse($value)->format('h:i:s A'),
+        );
+    }
+
+
+    //This Accessor for 12 hours time formate with AM/PM
+
+    protected function endTime(): Attribute
+    {
+        return Attribute::make(
+            get: fn(string $value) => Carbon::parse($value)->format('h:i:s A'),
+        );
+    }
