@@ -35,7 +35,10 @@ step-5 : Controller :
         return Socialite::driver('facebook')->redirect();
     }
 
+
+
     // Handle Facebook Callback
+
     public function handleFacebookCallback()
     {
         try {
