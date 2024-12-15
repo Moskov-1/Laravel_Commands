@@ -1,0 +1,29 @@
+spatie role which user will go where !!
+
+--------------------------------------------------------------------------------------------------
+
+## location:
+----------------------------------------
+  App\Http\Controllers\Auth;
+
+AuthenticatedSessionController.php
+
+## Function:
+---------------------------------------------
+
+public function store(LoginRequest $request): RedirectResponse
+    {
+        $request->authenticate();
+
+        $request->session()->regenerate();       
+
+        //Only For admin
+        //if (auth()->user()->hasRole('admin')) {
+
+        
+        //For admin and manager
+        if (auth()->user()->hasAnyRole(['admin', 'manager'])) {
+            return redirect()->intended(RouteServiceProvider::HOME);
+        }
+        return redirect()->intended(RouteServiceProvider::USER);
+    }

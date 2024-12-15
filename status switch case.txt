@@ -1,0 +1,188 @@
+****************status switch case*************
+
+
+style:
+-----------------------------
+<style>
+    .switch {
+        position: relative;
+        display: inline-block;
+        width: 34px;
+        height: 20px;
+    }
+
+    .switch input {
+        opacity: 0;
+        width: 0;
+        height: 0;
+    }
+
+    .slider {
+        position: absolute;
+        cursor: pointer;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background-color: #ccc;
+        transition: .4s;
+    }
+
+    .slider:before {
+        position: absolute;
+        content: "";
+        height: 12px;
+        width: 12px;
+        left: 4px;
+        bottom: 4px;
+        background-color: white;
+        transition: .4s;
+    }
+
+    input:checked + .slider {
+        background-color: #0d6efd;
+    }
+
+    input:checked + .slider:before {
+        transform: translateX(14px);
+    }
+
+    .slider.round {
+        border-radius: 34px;
+    }
+
+    .slider.round:before {
+        border-radius: 50%;
+    }
+</style>
+
+
+Route part :
+----------------------------------------------------------------
+Route::post('/admin/user/toggle-status/{id}', [UserController::class, 'toggleStatus'])->name('admin.user.toggle-status');
+
+
+Body Part:
+-----------------------------------------------------------------------
+ <td>
+      
+  <label class="switch">
+   
+  <input type="checkbox" id="toggle-{{ $user->id }}" onchange="toggleStatus({{ $user->id }})" {{ $user->status === 'Active' ? 'checked' : '' }}>
+  
+  <span class="slider round"></span>
+    
+   </label>
+  
+    </td>
+
+
+
+script with swal :
+---------------------------------
+
+{{-- status toggle start --}}
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script>
+function toggleStatus(id) {
+    $.ajax({
+        url: '{{ route('admin.user.toggle-status', '') }}/' + id,
+        type: 'POST',
+        data: {
+            _token: '{{ csrf_token() }}'
+        },
+        success: function(response) {
+            // Optional: Update the state of the toggle if needed
+            let toggleSwitch = $('#toggle-' + id);
+            if (response.status === 'active') {
+                toggleSwitch.prop('checked', true);
+            } else {
+                toggleSwitch.prop('checked', false);
+            }
+        },
+        error: function(xhr) {
+            console.error('Error toggling status');
+            // Revert switch state if error occurs
+            $('#toggle-' + id).prop('checked', !$('#toggle-' + id).is(':checked'));
+        }
+    });
+}
+</script>
+
+
+<script>
+function toggleStatus(id) {
+// Show SweetAlert confirmation
+Swal.fire({
+    title: 'Are you sure?',
+    text: "Do you want to change the status?",
+    icon: 'warning',
+    showCancelButton: true,
+    confirmButtonColor: '#3085d6',
+    cancelButtonColor: '#d33',
+    confirmButtonText: 'Yes, change it!'
+}).then((result) => {
+    if (result.isConfirmed) {
+        // Proceed with AJAX request if confirmed
+        $.ajax({
+            url: '{{ route('admin.user.toggle-status', '') }}/' + id,
+            type: 'POST',
+            data: {
+                _token: '{{ csrf_token() }}'
+            },
+            success: function(response) {
+                // Show success message with Swal and timer
+                Swal.fire({
+                    title: 'Status Changed!',
+                    text: 'The User status has been updated.',
+                    icon: 'success',
+                    timer: 800,
+                    showConfirmButton: false,
+                });
+
+                // Optionally update the state of the toggle
+                let toggleSwitch = $('#toggle-' + id);
+                if (response.status === 'active') {
+                    toggleSwitch.prop('checked', true);
+                } else {
+                    toggleSwitch.prop('checked', false);
+                }
+            },
+            error: function(xhr) {
+                console.error('Error toggling status');
+                // Revert switch state if error occurs
+                $('#toggle-' + id).prop('checked', !$('#toggle-' + id).is(':checked'));
+            }
+        });
+    } else {
+        // If not confirmed, revert the switch
+        $('#toggle-' + id).prop('checked', !$('#toggle-' + id).is(':checked'));
+    }
+});
+}
+</script>
+
+{{-- user status end--}}
+
+
+
+controller part :
+----------------------------------------------------------------------
+
+  public function toggleStatus(Request $request, $id)
+    {
+        try {
+            $user = User::findOrFail($id);
+            $user->status = $user->status === 'Active' ? 'Deactive' : 'Active';
+            $user->save();
+            return response()->json(['status' => $user]);
+        } catch (\Exception $e) {
+            Log::error($e->getMessage());
+            return response()->json(['error' => 'Unable to toggle status'], 500);
+        }
+    }
+
+
+
+
+

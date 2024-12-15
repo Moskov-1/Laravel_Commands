@@ -1,0 +1,89 @@
+For energy boss project:
+*************************************************
+ ----------------------M.I.------------------------------
+without login user: changed here for redirect route:  'login' to 'signin' 
+
+App\Http\Middleware :
+Authenticate.php
+-
+I have added this line: 
+
+protected function redirectTo(Request $request): ?string
+    {
+// I have added this extra if option
+// if (auth()->guest()) {
+            return route('homepage');
+        }
+      
+//Previous or default ja thake:
+        return $request->expectsJson() ? null : route('login');
+    }
+------------------------M.I.---------------------------------------------------------------
+
+
+step-1 : Create a Middleware : RoleMiddleware.php
+-------------------------------------------------------
+ public function handle(Request $request, Closure $next, ...$roles)
+    {
+
+        if (!auth()->check()) {
+            return redirect()->route('signin');
+        }
+
+        // (admin or manager)
+        if (!auth()->user()->hasAnyRole($roles)) { // Spatie's hasAnyRole
+            abort(Response::HTTP_FORBIDDEN, 'Unauthorized access.');
+        }
+
+        return $next($request);
+    }
+
+
+
+
+step-2 : App\Http \ kernal.php  :
+------------------------------------------
+
+ protected $middlewareAliases = [      
+        'role.custom' => \App\Http\Middleware\RoleMiddleware::class,
+    ];
+
+
+
+
+step-3 : Backend.php :
+------------------------------------
+Route::middleware(['auth', 'role.custom:admin,manager'])->group(function () {
+    Route::get('/dashboard', [AdminDashboardController::class, 'index'])->name('dashboard');
+});
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
