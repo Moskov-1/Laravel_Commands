@@ -1,0 +1,17 @@
+BD Calling work structure
+-------------------------------------------------------
+1. Project structure analyze
+2. Relational database (ORM) 
+	(i) one to one 
+	(ii) one two many
+	(iii) many to many
+3. Database Planning
+4. JS / AJAX / J-QUERY
+5. Breeze and UI Auth (Log in , registration)
+6. Yajra Data Table
+7. Dropify (image)
+8. Stripe and paypal ( payment gateway)
+
+# Optional for API :
+9. JWT & Sanctum or passport ( Must know JWT token auth).
+10. Postman  

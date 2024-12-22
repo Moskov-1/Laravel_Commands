@@ -1,0 +1,40 @@
+Git Globally set up:
+--------------------------------------
+
+step -1 : check version : git --version
+----------
+
+step -2 : git global user.name "MD-IQBAL-HOSAIN"
+-------------------------------------------------------------------------
+(If want to change : 
+git config --global user.name "abcd" 
+)
+
+(If want to unset user name : 
+git config --global --unset user.name 
+)
+
+step -3 : git config --global user.email "webdeviqbal@gmail.com"
+-------------------------------------------------------------------------------------
+(If want to change : 
+git config --global user.email "abcd@gamil.com" 
+)
+
+(If want to unset user email : 
+git config --global --unset user.email 
+)
+
+step-4 : If need to git set for folder : then just remove the global ( git config user.name "abcd" ,  git config user.email "abcd@gamil.com" )
+---------------------------------------------------------------------
+step-5 : for check : git config --list
+----------------------------------------------------
+
+
+
+
+
+
+
+
+
+
