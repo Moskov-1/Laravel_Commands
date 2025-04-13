@@ -3,8 +3,7 @@ ____________________________
 
 
 ---------------------------------------------------
-step-1: 
-	php artisan make:command ExpireSubscriptions
+step-1: php artisan make:command ExpireSubscriptions
 
 -----------------------------------------------------
 

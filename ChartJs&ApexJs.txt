@@ -1,0 +1,245 @@
+step-1:
+------------------------------
+Controller :
+
+
+<?php
+
+namespace App\Http\Controllers\Web\Backend;
+
+use App\Models\Pack;
+use App\Models\Order;
+use App\Models\Melody;
+use Illuminate\View\View;
+use App\Models\UserMembership;
+use Illuminate\Support\Facades\DB;
+use App\Http\Controllers\Controller;
+use App\Models\User; // Make sure you import the User model
+
+class DashboardController extends Controller
+{
+    /**
+     * Display the dashboard page.
+     *
+     * @return View
+     */
+
+    public function index(): View
+    {
+        /*For user count start  */
+
+        $newUsers = User::whereYear('created_at', now()->year)->get();
+
+        // Define all months of the year
+        $months = [
+            'January',
+            'February',
+            'March',
+            'April',
+            'May',
+            'June',
+            'July',
+            'August',
+            'September',
+            'October',
+            'November',
+            'December'
+        ];
+
+        // Group the users by the month they were created
+        $userCountsByMonth = array_fill_keys($months, null); // Initialize all months with null (no bar)
+
+        $usersGroupedByMonth = $newUsers->groupBy(function ($user) {
+            return $user->created_at->format('F'); // Group by month name
+        });
+
+        // Populate the count of users in the correct month
+        foreach ($usersGroupedByMonth as $month => $users) {
+            $userCountsByMonth[$month] = count($users); // Set actual count where users exist
+        }
+
+        // Prepare chart data with usernames and types
+        $chartData = [
+            'labels' => $months, // Show all months as labels
+            'data' => array_values($userCountsByMonth),
+            'usernames' => $usersGroupedByMonth->map(function ($users) {
+                return $users->map(fn($user) => [
+                    'full_name' => $user->name,
+                    'type' => $user->type,
+                ])->all();
+            }),
+        ];
+
+        /*For user count end  */
+
+
+        // Pass both user and order chart data to the view
+        return view('backend.layouts.dashboard', compact('chartData', 'orderChartData', 'currentMonthOrdersCount', 'TotalPrice', 'TotalMembershipAmount', 'MembershipCancellationRate', 'TotalMelody', 'TopSoldPack', 'TopDownloadMelody', 'TotalDownloadMelody','totalPack'));
+    }
+
+    
+}
+
+
+
+
+step-2 :
+-----------------------------
+Blade file:
+----------------------------
+
+
+<div class="row mt-4">
+        <div class="col-lg-6">
+            <div class="card-style mb-30">
+                <p class="text-success text-bold text-center">Users Data for Each Month</p>
+                <div class="chart-container">
+                    <hr>
+                    {{-- cavas tag for chart js --}}
+                    {{-- <canvas id="new-users-chart"></canvas> --}}
+                    
+                    {{-- div tag for apex chart --}}
+                    <div id="new-users-chart"></div>
+
+                </div>
+            </div>
+        </div>
+
+           </div>
+
+
+
+@push('script')
+{{-- chart js --}}
+    {{-- <script src="https://cdn.jsdelivr.net/npm/chart.js"></script> --}}
+    {{-- chart for new users start --}}
+    {{-- <script>
+        // Data passed from the controller
+        const labels = @json($chartData['labels']); // Will always have 12 months
+        const data = @json($chartData['data']); // Will have counts, with 0 for months without users
+
+        const ctx = document.getElementById('new-users-chart').getContext('2d');
+        const newUserChart = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'This year\'s Users',
+                    data: data,
+                    backgroundColor: [
+                        'rgba(54, 162, 235, 0.5)',
+                        'rgba(255, 99, 132, 0.5)',
+                        'rgba(75, 192, 192, 0.5)',
+                        'rgba(153, 102, 255, 0.5)',
+                        'rgba(255, 159, 64, 0.5)',
+                        'rgba(0, 123, 255, 0.5)',
+                        'rgba(220, 53, 69, 0.5)',
+                        'rgba(40, 167, 69, 0.5)',
+                        'rgba(255, 206, 86, 0.5)',
+                        'rgba(23, 162, 184, 0.5)',
+                        'rgba(255, 193, 7, 0.5)',
+                        'rgba(188, 80, 144, 0.5)'
+                    ],
+                    borderColor: [
+                        'rgba(255, 99, 132,0.5)',
+                        'rgba(54, 162, 235, 0.5)',
+                        'rgba(255, 206, 86, 0.5)',
+                        'rgba(75, 192, 192, 0.5)',
+                        'rgba(153, 102, 255, 0.5)',
+                        'rgba(255, 159, 64, 0.5)',
+                        'rgba(0, 123, 255, 0.5)',
+                        'rgba(220, 53, 69, 0.5)',
+                        'rgba(40, 167, 69, 0.5)',
+                        'rgba(23, 162, 184, 0.5)',
+                        'rgba(255, 193, 7, 0.5)',
+                        'rgba(188, 80, 144, 0.5)'
+                    ],
+                    borderWidth: 1,
+                    barThickness: 50
+                }]
+            },
+            options: {
+                scales: {
+                    x: {
+                        beginAtZero: true
+                    }
+                }
+            }
+        });
+    </script> --}}
+    {{-- chart for new users end --}}
+
+    {{-- Apex Chart js (Total user graph)--}}
+    <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const labels = @json($chartData['labels']);
+            const data = @json($chartData['data']);
+
+            var options = {
+                chart: {
+                    type: 'bar',
+                    height: 350
+                },
+                series: [{
+                    name: "This year's Users",
+                    data: data
+                }],
+                xaxis: {
+                    categories: labels
+                },
+                colors: [
+                    '#36A2EB', '#FF6384', '#4BC0C0', '#9966FF', '#FF9F40',
+                    '#007BFF', '#DC3545', '#28A745', '#FFCE56', '#17A2B8',
+                    '#FFC107', '#BC5090'
+                ],
+                plotOptions: {
+                    bar: {
+                        columnWidth: '50%',
+                        distributed: true
+                    }
+                },
+                legend: {
+                    show: false
+                }
+            };
+
+            var chart = new ApexCharts(document.querySelector("#new-users-chart"), options);
+            chart.render();
+        });
+    </script>
+@endpush
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
