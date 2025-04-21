@@ -1,0 +1,11 @@
+postman:
+----------------------------------------------
+
+param>authorization>header>body>script>setting
+
+script: eta te ei code set korte hobe
+----------------------------------------
+
+const res = pm.response.json();
+const token = res.data.token.original.access_token;
+pm.environment.set("token", token);
