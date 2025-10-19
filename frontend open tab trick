@@ -1,0 +1,78 @@
+<htlm>
+ <ul class="nav nav-tabs" id="settingsTabs" role="tablist">
+        <li class="nav-item">
+            <button class="nav-link active" id="stripe-tab" data-bs-toggle="tab"
+                    data-bs-target="#stripe" type="button" role="tab"
+                    data-uri="{{ route('backend.settings.payments.stripe.update') }}">Stripe</button>
+        </li>
+        <li class="nav-item">
+            <button class="nav-link" id="mail-tab" data-bs-toggle="tab"
+                    data-bs-target="#mail" type="button" role="tab"
+                    data-uri="{{ route('backend.settings.payments.stripe.test') }}">SSL COMMERZ</button>
+        </li>
+  </ul>
+   <div class="tab-content mt-4" id="settingsTabsContent">
+        <!-- Stripe Tab -->
+        <div class="tab-pane fade show active" id="stripe" role="tabpanel">
+            <form class="ajax-form">
+             ... data ...
+             </form>
+        </div>
+    </div>
+</htlm>
+@push('scripts-bottom')
+    
+    <script>
+        $(function () {
+
+            // ===== Remember Active Tab =====
+            const activeTabKey = 'activeSettingsTab';
+
+            // On tab change — save ID
+            $('button[data-bs-toggle="tab"]').on('shown.bs.tab', function (e) {
+                localStorage.setItem(activeTabKey, $(e.target).attr('id'));
+            });
+
+            // On page load — restore last active tab
+            const lastTab = localStorage.getItem(activeTabKey);
+            if (lastTab) {
+                const trigger = document.getElementById(lastTab);
+                if (trigger) {
+                    const tab = new bootstrap.Tab(trigger);
+                    tab.show();
+                }
+            }
+
+            // ===== AJAX Form Submission =====
+            $('.ajax-form').on('submit', function (e) {
+                e.preventDefault();
+
+                const $form = $(this);
+                const activeTab = $('#settingsTabs .nav-link.active');
+                const $url = activeTab.data('uri');
+                console.log($url, $form.serialize())
+                //const csrf = $('meta[name="csrf-token"]').attr('content');
+                const csrf = '{{ csrf_token() }}';
+
+                $.ajax({
+                    url: $url,
+                    method: 'PUT',
+                    data: $form.serialize(),
+                    headers: { 'X-CSRF-TOKEN': csrf },
+                    success: function (res) {
+                        $('#responseBox').text(JSON.stringify(res, null, 2));
+
+                        // Reload the page but stay on same tab
+                        setTimeout(() => {
+                            location.reload();
+                        }, 800);
+                    },
+                    error: function (xhr) {
+                        console.log('failed ')
+                        $('#responseBox').text('Error: ' + xhr.responseText);
+                    }
+                });
+            });
+        });
+    </script>
+@endpush
